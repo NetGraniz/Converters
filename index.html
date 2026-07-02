@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Convert Lab</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar" id="sidebar" aria-label="Конвертеры">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">CL</span>
+          <div>
+            <strong>Convert Lab</strong>
+            <small>Быстрые файловые инструменты</small>
+          </div>
+        </div>
+
+        <nav class="converter-nav" aria-label="Список конвертеров">
+          <button class="nav-item is-active" type="button" data-view="home">
+            <span class="nav-icon" aria-hidden="true">⌂</span>
+            <span>Главная</span>
+          </button>
+          <button class="nav-item" type="button" data-view="webp-png">
+            <span class="nav-icon" aria-hidden="true">⇄</span>
+            <span>WebP в PNG</span>
+          </button>
+          <button class="nav-item" type="button" disabled>
+            <span class="nav-icon" aria-hidden="true">＋</span>
+            <span>Следующий конвертер</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="overlay" id="overlay" hidden></div>
+
+      <main class="app">
+        <header class="app-header">
+          <button class="menu-button" id="menuButton" type="button" aria-label="Открыть меню конвертеров" title="Конвертеры">
+            <span aria-hidden="true">☰</span>
+          </button>
+          <div>
+            <p class="eyebrow">Локальная обработка файлов</p>
+            <h1>Convert Lab</h1>
+          </div>
+        </header>
+
+        <section class="view is-active" id="homeView" data-view-panel="home">
+          <div class="hero">
+            <div class="hero-copy">
+              <h2>Главная страница для набора конвертеров</h2>
+              <p>Инструменты работают прямо в браузере: файлы не отправляются на сервер и подходят для GitHub Pages.</p>
+              <button class="primary" type="button" data-view="webp-png">Открыть WebP в PNG</button>
+            </div>
+            <div class="hero-panel" aria-label="Доступные конвертеры">
+              <button class="converter-card" type="button" data-view="webp-png">
+                <span>WebP → PNG</span>
+                <small>Массовая конвертация фото с ZIP-архивом</small>
+              </button>
+              <div class="converter-card is-muted">
+                <span>JPG → PNG</span>
+                <small>Заготовка для будущего инструмента</small>
+              </div>
+              <div class="converter-card is-muted">
+                <span>PNG → WebP</span>
+                <small>Можно добавить следующим</small>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="webpPngView" data-view-panel="webp-png" aria-labelledby="app-title">
+          <div class="workspace">
+            <div class="topbar">
+              <div>
+                <p class="eyebrow">Конвертер изображений</p>
+                <h2 id="app-title">WebP в PNG</h2>
+                <p>Массовая конвертация фото прямо в браузере</p>
+              </div>
+              <button class="icon-button" id="clearButton" type="button" aria-label="Очистить список" title="Очистить список">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <label class="dropzone" id="dropzone">
+              <input id="fileInput" type="file" accept="image/webp,.webp" multiple>
+              <span class="drop-icon" aria-hidden="true">↓</span>
+              <strong>Перетащите WebP сюда</strong>
+              <span>или выберите сразу много файлов</span>
+            </label>
+
+            <div class="controls">
+              <div class="stat">
+                <span id="fileCount">0</span>
+                <small>файлов</small>
+              </div>
+              <div class="stat">
+                <span id="doneCount">0</span>
+                <small>готово</small>
+              </div>
+              <button id="convertButton" class="primary" type="button" disabled>Конвертировать</button>
+              <button id="zipButton" type="button" disabled>Скачать ZIP</button>
+            </div>
+
+            <div class="progress" aria-hidden="true">
+              <div id="progressBar"></div>
+            </div>
+
+            <ul class="file-list" id="fileList" aria-live="polite"></ul>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="fileRowTemplate">
+      <li class="file-row">
+        <div class="thumb"></div>
+        <div class="file-info">
+          <strong class="file-name"></strong>
+          <span class="file-status"></span>
+        </div>
+        <button class="download-one" type="button" disabled>PNG</button>
+      </li>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
