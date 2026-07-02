@@ -26,9 +26,9 @@
             <span class="nav-icon" aria-hidden="true">⇄</span>
             <span>WebP в PNG</span>
           </button>
-          <button class="nav-item" type="button" disabled>
-            <span class="nav-icon" aria-hidden="true">＋</span>
-            <span>Следующий конвертер</span>
+          <button class="nav-item" type="button" data-view="compress-photo">
+            <span class="nav-icon" aria-hidden="true">⇣</span>
+            <span>Сжать фото до</span>
           </button>
         </nav>
       </aside>
@@ -58,10 +58,10 @@
                 <span>WebP → PNG</span>
                 <small>Массовая конвертация фото с ZIP-архивом</small>
               </button>
-              <div class="converter-card is-muted">
-                <span>JPG → PNG</span>
-                <small>Заготовка для будущего инструмента</small>
-              </div>
+              <button class="converter-card" type="button" data-view="compress-photo">
+                <span>Сжать фото до</span>
+                <small>Уменьшение до нужного веса или нового разрешения</small>
+              </button>
               <div class="converter-card is-muted">
                 <span>PNG → WebP</span>
                 <small>Можно добавить следующим</small>
@@ -110,6 +110,94 @@
             <ul class="file-list" id="fileList" aria-live="polite"></ul>
           </div>
         </section>
+
+        <section class="view" id="compressPhotoView" data-view-panel="compress-photo" aria-labelledby="compress-title">
+          <div class="workspace">
+            <div class="topbar">
+              <div>
+                <p class="eyebrow">Оптимизация изображений</p>
+                <h2 id="compress-title">Сжать фото до</h2>
+                <p>Уменьшение веса файла или изменение разрешения прямо в браузере</p>
+              </div>
+              <button class="icon-button" id="compressClearButton" type="button" aria-label="Очистить список" title="Очистить список">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <label class="dropzone" id="compressDropzone">
+              <input id="compressFileInput" type="file" accept="image/*" multiple>
+              <span class="drop-icon" aria-hidden="true">↓</span>
+              <strong>Перетащите фото сюда</strong>
+              <span>JPG, PNG, WebP и другие форматы изображений</span>
+            </label>
+
+            <div class="settings-panel">
+              <div class="mode-switch" role="radiogroup" aria-label="Режим сжатия">
+                <label>
+                  <input type="radio" name="compressMode" value="size" checked>
+                  <span>До веса</span>
+                </label>
+                <label>
+                  <input type="radio" name="compressMode" value="resolution">
+                  <span>До разрешения</span>
+                </label>
+              </div>
+
+              <div class="settings-grid">
+                <label class="field field-size">
+                  <span>Целевой вес, KB</span>
+                  <input id="targetSizeKb" type="number" min="20" step="10" value="500">
+                </label>
+                <label class="field field-size">
+                  <span>Формат</span>
+                  <select id="targetFormat">
+                    <option value="image/jpeg">JPG</option>
+                    <option value="image/webp">WebP</option>
+                  </select>
+                </label>
+                <label class="field field-resolution" hidden>
+                  <span>Ширина, px</span>
+                  <input id="targetWidth" type="number" min="1" step="1" placeholder="например 1280">
+                </label>
+                <label class="field field-resolution" hidden>
+                  <span>Высота, px</span>
+                  <input id="targetHeight" type="number" min="1" step="1" placeholder="авто">
+                </label>
+                <label class="field field-resolution" hidden>
+                  <span>Формат</span>
+                  <select id="resizeFormat">
+                    <option value="image/jpeg">JPG</option>
+                    <option value="image/webp">WebP</option>
+                    <option value="image/png">PNG</option>
+                  </select>
+                </label>
+                <label class="field field-resolution" hidden>
+                  <span>Качество</span>
+                  <input id="resizeQuality" type="range" min="40" max="95" value="82">
+                </label>
+              </div>
+            </div>
+
+            <div class="controls">
+              <div class="stat">
+                <span id="compressFileCount">0</span>
+                <small>файлов</small>
+              </div>
+              <div class="stat">
+                <span id="compressDoneCount">0</span>
+                <small>готово</small>
+              </div>
+              <button id="compressButton" class="primary" type="button" disabled>Сжать</button>
+              <button id="compressZipButton" type="button" disabled>Скачать ZIP</button>
+            </div>
+
+            <div class="progress" aria-hidden="true">
+              <div id="compressProgressBar"></div>
+            </div>
+
+            <ul class="file-list" id="compressFileList" aria-live="polite"></ul>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -121,6 +209,17 @@
           <span class="file-status"></span>
         </div>
         <button class="download-one" type="button" disabled>PNG</button>
+      </li>
+    </template>
+
+    <template id="compressRowTemplate">
+      <li class="file-row">
+        <div class="thumb"></div>
+        <div class="file-info">
+          <strong class="file-name"></strong>
+          <span class="file-status"></span>
+        </div>
+        <button class="download-one" type="button" disabled>Фото</button>
       </li>
     </template>
 
