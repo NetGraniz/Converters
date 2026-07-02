@@ -14,8 +14,30 @@
   const menuButton = document.querySelector("#menuButton");
   const navButtons = document.querySelectorAll("[data-view]");
   const viewPanels = document.querySelectorAll("[data-view-panel]");
+  const compressFileInput = document.querySelector("#compressFileInput");
+  const compressDropzone = document.querySelector("#compressDropzone");
+  const compressFileList = document.querySelector("#compressFileList");
+  const compressTemplate = document.querySelector("#compressRowTemplate");
+  const compressButton = document.querySelector("#compressButton");
+  const compressZipButton = document.querySelector("#compressZipButton");
+  const compressClearButton = document.querySelector("#compressClearButton");
+  const compressFileCount = document.querySelector("#compressFileCount");
+  const compressDoneCount = document.querySelector("#compressDoneCount");
+  const compressProgressBar = document.querySelector("#compressProgressBar");
+  const modeInputs = document.querySelectorAll("input[name='compressMode']");
+  const targetSizeKb = document.querySelector("#targetSizeKb");
+  const targetFormat = document.querySelector("#targetFormat");
+  const targetWidth = document.querySelector("#targetWidth");
+  const targetHeight = document.querySelector("#targetHeight");
+  const resizeFormat = document.querySelector("#resizeFormat");
+  const resizeQuality = document.querySelector("#resizeQuality");
 
   const state = {
+    items: [],
+    isConverting: false
+  };
+
+  const compressState = {
     items: [],
     isConverting: false
   };
@@ -71,6 +93,30 @@
       candidate = `${stem}-${index}${ext}`;
     }
 
+    return candidate;
+  }
+
+  function extensionForType(type) {
+    if (type === "image/webp") return ".webp";
+    if (type === "image/png") return ".png";
+    return ".jpg";
+  }
+
+  function outputName(name, type, usedNames) {
+    const clean = name.replace(/\.[^.]+$/, "");
+    const baseName = clean + extensionForType(type);
+    if (!usedNames.has(baseName)) {
+      usedNames.add(baseName);
+      return baseName;
+    }
+
+    let index = 2;
+    let candidate = `${clean}-${index}${extensionForType(type)}`;
+    while (usedNames.has(candidate)) {
+      index += 1;
+      candidate = `${clean}-${index}${extensionForType(type)}`;
+    }
+    usedNames.add(candidate);
     return candidate;
   }
 
@@ -188,6 +234,206 @@
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function activeCompressMode() {
+    return document.querySelector("input[name='compressMode']:checked").value;
+  }
+
+  function updateCompressMode() {
+    const isSizeMode = activeCompressMode() === "size";
+    document.querySelectorAll(".field-size").forEach((field) => {
+      field.hidden = !isSizeMode;
+    });
+    document.querySelectorAll(".field-resolution").forEach((field) => {
+      field.hidden = isSizeMode;
+    });
+  }
+
+  function updateCompressStats() {
+    const ready = compressState.items.filter((item) => item.blob).length;
+    compressFileCount.textContent = compressState.items.length;
+    compressDoneCount.textContent = ready;
+    compressButton.disabled = !compressState.items.length || compressState.isConverting;
+    compressZipButton.disabled = !ready || compressState.isConverting;
+    compressProgressBar.style.width = compressState.items.length ? `${Math.round((ready / compressState.items.length) * 100)}%` : "0";
+  }
+
+  function setCompressRowStatus(item, status, isError) {
+    item.status.textContent = status;
+    item.row.classList.toggle("is-error", Boolean(isError));
+  }
+
+  function addCompressFiles(files) {
+    const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const usedNames = new Set(compressState.items.map((item) => item.outputName));
+
+    for (const file of imageFiles) {
+      const row = compressTemplate.content.firstElementChild.cloneNode(true);
+      const thumb = row.querySelector(".thumb");
+      const name = row.querySelector(".file-name");
+      const status = row.querySelector(".file-status");
+      const downloadButton = row.querySelector(".download-one");
+      const objectUrl = URL.createObjectURL(file);
+
+      thumb.style.backgroundImage = `url("${objectUrl}")`;
+      name.textContent = file.name;
+      status.textContent = `${formatBytes(file.size)} · ожидает`;
+
+      const item = {
+        file,
+        row,
+        status,
+        downloadButton,
+        objectUrl,
+        blob: null,
+        outputName: outputName(file.name, targetFormat.value, usedNames)
+      };
+
+      downloadButton.addEventListener("click", () => {
+        if (item.blob) downloadBlob(item.blob, item.outputName);
+      });
+
+      compressState.items.push(item);
+      compressFileList.append(row);
+    }
+
+    updateCompressStats();
+  }
+
+  function resetCompressAll() {
+    for (const item of compressState.items) {
+      URL.revokeObjectURL(item.objectUrl);
+    }
+    compressState.items = [];
+    compressFileList.textContent = "";
+    compressFileInput.value = "";
+    updateCompressStats();
+  }
+
+  function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("Canvas не смог создать изображение"));
+      }, type, quality);
+    });
+  }
+
+  function drawToCanvas(bitmap, width, height, fillWhite) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (fillWhite) {
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, width, height);
+    }
+    context.drawImage(bitmap, 0, 0, width, height);
+    return canvas;
+  }
+
+  function resolveResizeDimensions(sourceWidth, sourceHeight) {
+    const widthValue = Number(targetWidth.value);
+    const heightValue = Number(targetHeight.value);
+
+    if (widthValue > 0 && heightValue > 0) {
+      return { width: Math.round(widthValue), height: Math.round(heightValue) };
+    }
+    if (widthValue > 0) {
+      return { width: Math.round(widthValue), height: Math.max(1, Math.round(sourceHeight * (widthValue / sourceWidth))) };
+    }
+    if (heightValue > 0) {
+      return { width: Math.max(1, Math.round(sourceWidth * (heightValue / sourceHeight))), height: Math.round(heightValue) };
+    }
+    return { width: sourceWidth, height: sourceHeight };
+  }
+
+  async function compressToTargetSize(canvas, type, targetBytes) {
+    let low = 0.12;
+    let high = 0.95;
+    let best = await canvasToBlob(canvas, type, low);
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const quality = (low + high) / 2;
+      const blob = await canvasToBlob(canvas, type, quality);
+      if (blob.size <= targetBytes) {
+        best = blob;
+        low = quality;
+      } else {
+        high = quality;
+      }
+    }
+
+    return best;
+  }
+
+  async function compressItem(item) {
+    setCompressRowStatus(item, "обработка...", false);
+    const bitmap = await createImageBitmap(item.file);
+    const mode = activeCompressMode();
+    const type = mode === "size" ? targetFormat.value : resizeFormat.value;
+    const fillWhite = type === "image/jpeg";
+    const dimensions = mode === "size"
+      ? { width: bitmap.width, height: bitmap.height }
+      : resolveResizeDimensions(bitmap.width, bitmap.height);
+    const canvas = drawToCanvas(bitmap, dimensions.width, dimensions.height, fillWhite);
+    bitmap.close();
+
+    if (mode === "size") {
+      const targetBytes = Math.max(1, Number(targetSizeKb.value) || 500) * 1024;
+      item.blob = await compressToTargetSize(canvas, type, targetBytes);
+      if (item.blob.size > targetBytes) {
+        setCompressRowStatus(item, `${dimensions.width}×${dimensions.height} · ${formatBytes(item.blob.size)} · минимум качества`, false);
+      } else {
+        setCompressRowStatus(item, `${dimensions.width}×${dimensions.height} · ${formatBytes(item.blob.size)}`, false);
+      }
+    } else {
+      const quality = Math.max(0.4, Math.min(0.95, Number(resizeQuality.value) / 100));
+      item.blob = await canvasToBlob(canvas, type, quality);
+      setCompressRowStatus(item, `${dimensions.width}×${dimensions.height} · ${formatBytes(item.blob.size)}`, false);
+    }
+
+    item.outputName = outputName(item.file.name, type, new Set(compressState.items.filter((current) => current !== item).map((current) => current.outputName)));
+    item.downloadButton.disabled = false;
+    item.downloadButton.textContent = extensionForType(type).slice(1).toUpperCase();
+  }
+
+  async function compressAll() {
+    compressState.isConverting = true;
+    updateCompressStats();
+
+    for (const item of compressState.items) {
+      try {
+        await compressItem(item);
+      } catch (error) {
+        setCompressRowStatus(item, "не удалось обработать фото", true);
+        console.error(error);
+      }
+      updateCompressStats();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    compressState.isConverting = false;
+    updateCompressStats();
+  }
+
+  async function downloadCompressZip() {
+    const files = compressState.items
+      .filter((item) => item.blob)
+      .map((item) => ({ name: item.outputName, blob: item.blob }));
+
+    if (!files.length) return;
+    compressZipButton.disabled = true;
+    compressZipButton.textContent = "Упаковка...";
+
+    try {
+      const zipBlob = await createZip(files);
+      downloadBlob(zipBlob, "compressed-photos.zip");
+    } finally {
+      compressZipButton.textContent = "Скачать ZIP";
+      updateCompressStats();
+    }
   }
 
   async function downloadZip() {
@@ -323,6 +569,11 @@
   convertButton.addEventListener("click", convertAll);
   zipButton.addEventListener("click", downloadZip);
   clearButton.addEventListener("click", resetAll);
+  compressFileInput.addEventListener("change", () => addCompressFiles(compressFileInput.files));
+  compressButton.addEventListener("click", compressAll);
+  compressZipButton.addEventListener("click", downloadCompressZip);
+  compressClearButton.addEventListener("click", resetCompressAll);
+  modeInputs.forEach((input) => input.addEventListener("change", updateCompressMode));
   menuButton.addEventListener("click", openSidebar);
   overlay.addEventListener("click", closeSidebar);
 
@@ -352,5 +603,25 @@
     addFiles(event.dataTransfer.files);
   });
 
+  for (const eventName of ["dragenter", "dragover"]) {
+    compressDropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      compressDropzone.classList.add("is-dragging");
+    });
+  }
+
+  for (const eventName of ["dragleave", "drop"]) {
+    compressDropzone.addEventListener(eventName, () => {
+      compressDropzone.classList.remove("is-dragging");
+    });
+  }
+
+  compressDropzone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    addCompressFiles(event.dataTransfer.files);
+  });
+
+  updateCompressMode();
   updateStats();
+  updateCompressStats();
 })();
