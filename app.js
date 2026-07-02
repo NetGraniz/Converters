@@ -350,6 +350,10 @@
   }
 
   async function compressToTargetSize(canvas, type, targetBytes) {
+    if (type === "image/png") {
+      return canvasToBlob(canvas, type);
+    }
+
     let low = 0.12;
     let high = 0.95;
     let best = await canvasToBlob(canvas, type, low);
@@ -568,11 +572,11 @@
   fileInput.addEventListener("change", () => addFiles(fileInput.files));
   convertButton.addEventListener("click", convertAll);
   zipButton.addEventListener("click", downloadZip);
-  clearButton.addEventListener("click", resetAll);
+  clearButton.addEventListener("click", () => showView("home"));
   compressFileInput.addEventListener("change", () => addCompressFiles(compressFileInput.files));
   compressButton.addEventListener("click", compressAll);
   compressZipButton.addEventListener("click", downloadCompressZip);
-  compressClearButton.addEventListener("click", resetCompressAll);
+  compressClearButton.addEventListener("click", () => showView("home"));
   modeInputs.forEach((input) => input.addEventListener("change", updateCompressMode));
   menuButton.addEventListener("click", openSidebar);
   overlay.addEventListener("click", closeSidebar);
