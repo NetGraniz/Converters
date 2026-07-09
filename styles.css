@@ -444,6 +444,42 @@ p {
   padding: 0;
 }
 
+.unit-panel {
+  margin-top: 28px;
+}
+
+.unit-category-field {
+  width: min(360px, 100%);
+}
+
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.unit-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.unit-message,
+.unit-formula {
+  margin: 0;
+  min-height: 1.35em;
+  font-size: 0.95rem;
+}
+
+.unit-message {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.unit-formula {
+  color: var(--muted);
+}
+
 .stat {
   min-height: 54px;
   border: 1px solid var(--line);
@@ -616,6 +652,11 @@ p {
   }
 
   .compact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .unit-grid,
+  .unit-actions {
     grid-template-columns: 1fr;
   }
 
