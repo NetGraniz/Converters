@@ -30,6 +30,10 @@
             <span class="nav-icon" aria-hidden="true">⇣</span>
             <span>Сжать фото до</span>
           </button>
+          <button class="nav-item" type="button" data-view="unit-converter">
+            <span class="nav-icon" aria-hidden="true">≋</span>
+            <span>Единицы измерения</span>
+          </button>
         </nav>
       </aside>
 
@@ -61,6 +65,10 @@
               <button class="converter-card" type="button" data-view="compress-photo">
                 <span>Сжать фото до</span>
                 <small>Уменьшение до нужного веса или нового разрешения</small>
+              </button>
+              <button class="converter-card" type="button" data-view="unit-converter">
+                <span>Единицы измерения</span>
+                <small>Длина, масса, температура, скорость, объём и другие величины</small>
               </button>
               <div class="converter-card is-muted">
                 <span>В разработке</span>
@@ -214,6 +222,56 @@
             </div>
 
             <ul class="file-list" id="compressFileList" aria-live="polite"></ul>
+          </div>
+        </section>
+
+        <section class="view" id="unitConverterView" data-view-panel="unit-converter" aria-labelledby="unit-title">
+          <div class="workspace">
+            <div class="topbar">
+              <div>
+                <p class="eyebrow">Конвертер величин</p>
+                <h2 id="unit-title">Конвертер единиц</h2>
+                <p>Быстрое преобразование длины, массы, температуры, скорости, площади, объёма и цифровых величин</p>
+              </div>
+              <button class="icon-button" id="unitCloseButton" type="button" aria-label="На главную" title="На главную">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <div class="settings-panel unit-panel">
+              <label class="field unit-category-field">
+                <span>Категория</span>
+                <select id="unitCategory"></select>
+              </label>
+
+              <div class="unit-grid">
+                <label class="field">
+                  <span>Значение</span>
+                  <input id="unitInput" type="text" inputmode="decimal" placeholder="например 10 или 36,6">
+                </label>
+                <label class="field">
+                  <span>Из</span>
+                  <select id="unitFrom"></select>
+                </label>
+                <label class="field">
+                  <span>В</span>
+                  <select id="unitTo"></select>
+                </label>
+                <label class="field">
+                  <span>Результат</span>
+                  <input id="unitResult" type="text" readonly>
+                </label>
+              </div>
+
+              <div class="unit-actions">
+                <button id="swapUnitsButton" type="button">Поменять местами</button>
+                <button id="copyUnitButton" type="button">Скопировать результат</button>
+                <button id="clearUnitButton" type="button">Очистить</button>
+              </div>
+
+              <p class="unit-message" id="unitMessage" aria-live="polite"></p>
+              <p class="unit-formula" id="unitFormula"></p>
+            </div>
           </div>
         </section>
       </main>
