@@ -416,6 +416,10 @@ p {
   gap: 12px;
 }
 
+.compact-grid {
+  grid-template-columns: minmax(180px, 260px) minmax(220px, 1fr);
+}
+
 .field {
   min-width: 0;
   display: grid;
@@ -608,6 +612,10 @@ p {
   }
 
   .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-grid {
     grid-template-columns: 1fr;
   }
 
