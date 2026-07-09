@@ -24,7 +24,7 @@
           </button>
           <button class="nav-item" type="button" data-view="webp-png">
             <span class="nav-icon" aria-hidden="true">⇄</span>
-            <span>WebP в PNG</span>
+            <span>Форматы фото</span>
           </button>
           <button class="nav-item" type="button" data-view="compress-photo">
             <span class="nav-icon" aria-hidden="true">⇣</span>
@@ -51,12 +51,12 @@
             <div class="hero-copy">
               <h2>Главная страница для набора конвертеров</h2>
               <p>Инструменты работают прямо в браузере: файлы не отправляются на сервер и подходят для GitHub Pages.</p>
-              <button class="primary" type="button" data-view="webp-png">Открыть WebP в PNG</button>
+              <button class="primary" type="button" data-view="webp-png">Открыть конвертер</button>
             </div>
             <div class="hero-panel" aria-label="Доступные конвертеры">
               <button class="converter-card" type="button" data-view="webp-png">
-                <span>WebP → PNG</span>
-                <small>Массовая конвертация фото с ZIP-архивом</small>
+                <span>Форматы фото</span>
+                <small>Конвертация JPG, PNG, WebP и других изображений</small>
               </button>
               <button class="converter-card" type="button" data-view="compress-photo">
                 <span>Сжать фото до</span>
@@ -75,8 +75,8 @@
             <div class="topbar">
               <div>
                 <p class="eyebrow">Конвертер изображений</p>
-                <h2 id="app-title">WebP в PNG</h2>
-                <p>Массовая конвертация фото прямо в браузере</p>
+                <h2 id="app-title">Форматы фото</h2>
+                <p>Массовая конвертация изображений прямо в браузере</p>
               </div>
               <button class="icon-button" id="clearButton" type="button" aria-label="Очистить список" title="Очистить список">
                 <span aria-hidden="true">×</span>
@@ -84,11 +84,28 @@
             </div>
 
             <label class="dropzone" id="dropzone">
-              <input id="fileInput" type="file" accept="image/webp,.webp" multiple>
+              <input id="fileInput" type="file" accept="image/*" multiple>
               <span class="drop-icon" aria-hidden="true">↓</span>
-              <strong>Перетащите WebP сюда</strong>
-              <span>или выберите сразу много файлов</span>
+              <strong>Перетащите изображения сюда</strong>
+              <span>JPG, PNG, WebP и другие форматы</span>
             </label>
+
+            <div class="settings-panel">
+              <div class="settings-grid compact-grid">
+                <label class="field">
+                  <span>Конвертировать в</span>
+                  <select id="outputFormat">
+                    <option value="image/png">PNG</option>
+                    <option value="image/jpeg">JPG</option>
+                    <option value="image/webp">WebP</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Качество JPG/WebP</span>
+                  <input id="outputQuality" type="range" min="40" max="95" value="90">
+                </label>
+              </div>
+            </div>
 
             <div class="controls">
               <div class="stat">
