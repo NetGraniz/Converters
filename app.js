@@ -9,6 +9,8 @@
   const fileCount = document.querySelector("#fileCount");
   const doneCount = document.querySelector("#doneCount");
   const progressBar = document.querySelector("#progressBar");
+  const outputFormat = document.querySelector("#outputFormat");
+  const outputQuality = document.querySelector("#outputQuality");
   const sidebar = document.querySelector("#sidebar");
   const overlay = document.querySelector("#overlay");
   const menuButton = document.querySelector("#menuButton");
@@ -74,8 +76,8 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function pngName(name) {
-    return name.replace(/\.webp$/i, "") + ".png";
+  function convertedName(name, type) {
+    return name.replace(/\.[^.]+$/, "") + extensionForType(type);
   }
 
   function uniqueName(baseName) {
@@ -135,11 +137,10 @@
   }
 
   function addFiles(files) {
-    const webpFiles = Array.from(files).filter((file) => {
-      return file.type === "image/webp" || /\.webp$/i.test(file.name);
-    });
+    const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const usedNames = new Set(state.items.map((item) => item.outputName));
 
-    for (const file of webpFiles) {
+    for (const file of imageFiles) {
       const row = template.content.firstElementChild.cloneNode(true);
       const thumb = row.querySelector(".thumb");
       const name = row.querySelector(".file-name");
@@ -158,7 +159,7 @@
         downloadButton,
         objectUrl,
         blob: null,
-        outputName: uniqueName(pngName(file.name))
+        outputName: outputName(file.name, outputFormat.value, usedNames)
       };
 
       downloadButton.addEventListener("click", () => {
@@ -185,24 +186,28 @@
   async function convertItem(item) {
     setRowStatus(item, "конвертация...", false);
     const bitmap = await createImageBitmap(item.file);
+    const type = outputFormat.value;
+    const fillWhite = type === "image/jpeg";
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
     const context = canvas.getContext("2d");
+    if (fillWhite) {
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
     context.drawImage(bitmap, 0, 0);
     const width = bitmap.width;
     const height = bitmap.height;
     bitmap.close();
 
-    item.blob = await new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Canvas не смог создать PNG"));
-      }, "image/png");
-    });
+    const quality = Math.max(0.4, Math.min(0.95, Number(outputQuality.value) / 100));
+    item.blob = await canvasToBlob(canvas, type, quality);
+    item.outputName = outputName(item.file.name, type, new Set(state.items.filter((current) => current !== item).map((current) => current.outputName)));
 
     item.downloadButton.disabled = false;
-    setRowStatus(item, `${width}×${height} · PNG ${formatBytes(item.blob.size)}`, false);
+    item.downloadButton.textContent = extensionForType(type).slice(1).toUpperCase();
+    setRowStatus(item, `${width}×${height} · ${item.downloadButton.textContent} ${formatBytes(item.blob.size)}`, false);
   }
 
   async function convertAll() {
@@ -451,7 +456,7 @@
 
     try {
       const zipBlob = await createZip(files);
-      downloadBlob(zipBlob, "webp-to-png.zip");
+      downloadBlob(zipBlob, "converted-images.zip");
     } finally {
       zipButton.textContent = "Скачать ZIP";
       updateStats();
@@ -572,11 +577,17 @@
   fileInput.addEventListener("change", () => addFiles(fileInput.files));
   convertButton.addEventListener("click", convertAll);
   zipButton.addEventListener("click", downloadZip);
-  clearButton.addEventListener("click", () => showView("home"));
+  clearButton.addEventListener("click", () => {
+    resetAll();
+    showView("home");
+  });
   compressFileInput.addEventListener("change", () => addCompressFiles(compressFileInput.files));
   compressButton.addEventListener("click", compressAll);
   compressZipButton.addEventListener("click", downloadCompressZip);
-  compressClearButton.addEventListener("click", () => showView("home"));
+  compressClearButton.addEventListener("click", () => {
+    resetCompressAll();
+    showView("home");
+  });
   modeInputs.forEach((input) => input.addEventListener("change", updateCompressMode));
   menuButton.addEventListener("click", openSidebar);
   overlay.addEventListener("click", closeSidebar);
