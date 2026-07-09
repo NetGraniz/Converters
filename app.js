@@ -33,6 +33,17 @@
   const targetHeight = document.querySelector("#targetHeight");
   const resizeFormat = document.querySelector("#resizeFormat");
   const resizeQuality = document.querySelector("#resizeQuality");
+  const unitCategory = document.querySelector("#unitCategory");
+  const unitInput = document.querySelector("#unitInput");
+  const unitFrom = document.querySelector("#unitFrom");
+  const unitTo = document.querySelector("#unitTo");
+  const unitResult = document.querySelector("#unitResult");
+  const unitMessage = document.querySelector("#unitMessage");
+  const unitFormula = document.querySelector("#unitFormula");
+  const swapUnitsButton = document.querySelector("#swapUnitsButton");
+  const copyUnitButton = document.querySelector("#copyUnitButton");
+  const clearUnitButton = document.querySelector("#clearUnitButton");
+  const unitCloseButton = document.querySelector("#unitCloseButton");
 
   const state = {
     items: [],
@@ -44,11 +55,272 @@
     isConverting: false
   };
 
+  const unitCategories = {
+    length: {
+      label: "Длина",
+      units: [
+        { id: "mm", label: "миллиметр", symbol: "мм", factor: 0.001 },
+        { id: "cm", label: "сантиметр", symbol: "см", factor: 0.01 },
+        { id: "m", label: "метр", symbol: "м", factor: 1 },
+        { id: "km", label: "километр", symbol: "км", factor: 1000 },
+        { id: "in", label: "дюйм", symbol: "дюйм", factor: 0.0254 },
+        { id: "ft", label: "фут", symbol: "фт", factor: 0.3048 },
+        { id: "yd", label: "ярд", symbol: "ярд", factor: 0.9144 },
+        { id: "mi", label: "миля", symbol: "миля", factor: 1609.344 }
+      ]
+    },
+    mass: {
+      label: "Масса",
+      units: [
+        { id: "mg", label: "миллиграмм", symbol: "мг", factor: 0.000001 },
+        { id: "g", label: "грамм", symbol: "г", factor: 0.001 },
+        { id: "kg", label: "килограмм", symbol: "кг", factor: 1 },
+        { id: "t", label: "тонна", symbol: "т", factor: 1000 },
+        { id: "oz", label: "унция", symbol: "унц.", factor: 0.028349523125 },
+        { id: "lb", label: "фунт", symbol: "фунт", factor: 0.45359237 }
+      ]
+    },
+    temperature: {
+      label: "Температура",
+      temperature: true,
+      units: [
+        { id: "c", label: "Цельсий", symbol: "°C", toBase: (value) => value, fromBase: (value) => value },
+        { id: "f", label: "Фаренгейт", symbol: "°F", toBase: (value) => (value - 32) * 5 / 9, fromBase: (value) => value * 9 / 5 + 32 },
+        { id: "k", label: "Кельвин", symbol: "K", toBase: (value) => value - 273.15, fromBase: (value) => value + 273.15 }
+      ]
+    },
+    area: {
+      label: "Площадь",
+      units: [
+        { id: "mm2", label: "квадратный миллиметр", symbol: "мм²", factor: 0.000001 },
+        { id: "cm2", label: "квадратный сантиметр", symbol: "см²", factor: 0.0001 },
+        { id: "m2", label: "квадратный метр", symbol: "м²", factor: 1 },
+        { id: "km2", label: "квадратный километр", symbol: "км²", factor: 1000000 },
+        { id: "ha", label: "гектар", symbol: "га", factor: 10000 },
+        { id: "acre", label: "акр", symbol: "акр", factor: 4046.8564224 },
+        { id: "ft2", label: "квадратный фут", symbol: "фт²", factor: 0.09290304 },
+        { id: "mi2", label: "квадратная миля", symbol: "миля²", factor: 2589988.110336 }
+      ]
+    },
+    volume: {
+      label: "Объём",
+      units: [
+        { id: "ml", label: "миллилитр", symbol: "мл", factor: 0.000001 },
+        { id: "l", label: "литр", symbol: "л", factor: 0.001 },
+        { id: "m3", label: "кубический метр", symbol: "м³", factor: 1 },
+        { id: "cm3", label: "кубический сантиметр", symbol: "см³", factor: 0.000001 },
+        { id: "gal-us", label: "галлон США", symbol: "gal US", factor: 0.003785411784 },
+        { id: "pt-us", label: "пинта США", symbol: "pt US", factor: 0.000473176473 },
+        { id: "floz-us", label: "жидкая унция США", symbol: "fl oz US", factor: 0.0000295735295625 }
+      ]
+    },
+    speed: {
+      label: "Скорость",
+      units: [
+        { id: "mps", label: "метр в секунду", symbol: "м/с", factor: 1 },
+        { id: "kmh", label: "километр в час", symbol: "км/ч", factor: 1 / 3.6 },
+        { id: "mph", label: "миля в час", symbol: "mph", factor: 0.44704 },
+        { id: "fps", label: "фут в секунду", symbol: "фт/с", factor: 0.3048 },
+        { id: "kn", label: "узел", symbol: "уз", factor: 0.514444444444 }
+      ]
+    },
+    time: {
+      label: "Время",
+      units: [
+        { id: "ms", label: "миллисекунда", symbol: "мс", factor: 0.001 },
+        { id: "s", label: "секунда", symbol: "с", factor: 1 },
+        { id: "min", label: "минута", symbol: "мин", factor: 60 },
+        { id: "h", label: "час", symbol: "ч", factor: 3600 },
+        { id: "d", label: "день", symbol: "день", factor: 86400 },
+        { id: "wk", label: "неделя", symbol: "нед.", factor: 604800 },
+        { id: "mo", label: "месяц", symbol: "мес.", factor: 2592000 },
+        { id: "yr", label: "год", symbol: "год", factor: 31536000 }
+      ]
+    },
+    digital: {
+      label: "Цифровые данные",
+      units: [
+        { id: "bit", label: "бит", symbol: "bit", factor: 0.125 },
+        { id: "b", label: "байт", symbol: "B", factor: 1 },
+        { id: "kb", label: "килобайт", symbol: "KB", factor: 1000 },
+        { id: "mb", label: "мегабайт", symbol: "MB", factor: 1000 ** 2 },
+        { id: "gb", label: "гигабайт", symbol: "GB", factor: 1000 ** 3 },
+        { id: "tb", label: "терабайт", symbol: "TB", factor: 1000 ** 4 },
+        { id: "kib", label: "кибибайт", symbol: "KiB", factor: 1024 },
+        { id: "mib", label: "мебибайт", symbol: "MiB", factor: 1024 ** 2 },
+        { id: "gib", label: "гибибайт", symbol: "GiB", factor: 1024 ** 3 },
+        { id: "tib", label: "тебибайт", symbol: "TiB", factor: 1024 ** 4 }
+      ]
+    },
+    energy: {
+      label: "Энергия",
+      units: [
+        { id: "j", label: "джоуль", symbol: "Дж", factor: 1 },
+        { id: "kj", label: "килоджоуль", symbol: "кДж", factor: 1000 },
+        { id: "cal", label: "калория", symbol: "кал", factor: 4.184 },
+        { id: "kcal", label: "килокалория", symbol: "ккал", factor: 4184 },
+        { id: "wh", label: "ватт-час", symbol: "Вт·ч", factor: 3600 },
+        { id: "kwh", label: "киловатт-час", symbol: "кВт·ч", factor: 3600000 }
+      ]
+    },
+    pressure: {
+      label: "Давление",
+      units: [
+        { id: "pa", label: "паскаль", symbol: "Па", factor: 1 },
+        { id: "kpa", label: "килопаскаль", symbol: "кПа", factor: 1000 },
+        { id: "bar", label: "бар", symbol: "бар", factor: 100000 },
+        { id: "mbar", label: "миллибар", symbol: "мбар", factor: 100 },
+        { id: "atm", label: "атмосфера", symbol: "атм", factor: 101325 },
+        { id: "mmhg", label: "мм рт. ст.", symbol: "мм рт. ст.", factor: 133.3223684211 },
+        { id: "psi", label: "PSI", symbol: "PSI", factor: 6894.757293168 }
+      ]
+    }
+  };
+
   function formatBytes(bytes) {
     if (!bytes) return "0 B";
     const units = ["B", "KB", "MB", "GB"];
     const power = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
     return `${(bytes / 1024 ** power).toFixed(power ? 1 : 0)} ${units[power]}`;
+  }
+
+  // Keeps up to 10 significant digits while removing visual noise from trailing zeroes.
+  function formatUnitNumber(value) {
+    if (!Number.isFinite(value)) return "";
+    if (value === 0) return "0";
+    const absolute = Math.abs(value);
+    const raw = absolute >= 1e10 || absolute < 1e-6
+      ? value.toExponential(9)
+      : value.toPrecision(10);
+    return raw
+      .replace(/(\.\d*?[1-9])0+(e.*)?$/i, "$1$2")
+      .replace(/\.0+(e.*)?$/i, "$1")
+      .replace(/\.0+$/, "");
+  }
+
+  function parseUnitValue(value) {
+    const normalized = value.trim().replace(",", ".");
+    if (!normalized) return null;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : Number.NaN;
+  }
+
+  function fillUnitSelect(select, units) {
+    select.textContent = "";
+    for (const unit of units) {
+      const option = document.createElement("option");
+      option.value = unit.id;
+      option.textContent = unit.label;
+      select.append(option);
+    }
+  }
+
+  function currentUnitCategory() {
+    return unitCategories[unitCategory.value];
+  }
+
+  function findUnit(category, id) {
+    return category.units.find((unit) => unit.id === id);
+  }
+
+  function updateUnitOptions() {
+    const category = currentUnitCategory();
+    fillUnitSelect(unitFrom, category.units);
+    fillUnitSelect(unitTo, category.units);
+    unitTo.selectedIndex = category.units.length > 1 ? 1 : 0;
+    updateUnitFormula();
+    convertUnits();
+  }
+
+  function convertUnits() {
+    const parsed = parseUnitValue(unitInput.value);
+    unitMessage.textContent = "";
+
+    if (parsed === null) {
+      unitResult.value = "";
+      updateUnitFormula();
+      return;
+    }
+    if (Number.isNaN(parsed)) {
+      unitResult.value = "";
+      unitMessage.textContent = "Введите корректное число";
+      updateUnitFormula();
+      return;
+    }
+
+    const category = currentUnitCategory();
+    const from = findUnit(category, unitFrom.value);
+    const to = findUnit(category, unitTo.value);
+    if (!from || !to) return;
+
+    // Temperature needs functions because offsets make simple coefficients incorrect.
+    const baseValue = category.temperature ? from.toBase(parsed) : parsed * from.factor;
+    const result = category.temperature ? to.fromBase(baseValue) : baseValue / to.factor;
+
+    unitResult.value = Number.isFinite(result) ? formatUnitNumber(result) : "";
+    updateUnitFormula();
+  }
+
+  function updateUnitFormula() {
+    const category = currentUnitCategory();
+    if (!category) return;
+    const from = findUnit(category, unitFrom.value);
+    const to = findUnit(category, unitTo.value);
+    if (!from || !to) {
+      unitFormula.textContent = "";
+      return;
+    }
+
+    if (category.temperature) {
+      const formulas = {
+        "c-f": "°F = °C × 9/5 + 32",
+        "f-c": "°C = (°F − 32) × 5/9",
+        "c-k": "K = °C + 273.15",
+        "k-c": "°C = K − 273.15",
+        "f-k": "K = (°F − 32) × 5/9 + 273.15",
+        "k-f": "°F = (K − 273.15) × 9/5 + 32"
+      };
+      unitFormula.textContent = formulas[`${from.id}-${to.id}`] || `1 ${from.symbol} = 1 ${to.symbol}`;
+      return;
+    }
+
+    // Digital units mix decimal KB/MB/GB/TB and binary KiB/MiB/GiB/TiB factors.
+    unitFormula.textContent = `1 ${from.symbol} = ${formatUnitNumber(from.factor / to.factor)} ${to.symbol}`;
+  }
+
+  function initializeUnitConverter() {
+    unitCategory.textContent = "";
+    for (const [id, category] of Object.entries(unitCategories)) {
+      const option = document.createElement("option");
+      option.value = id;
+      option.textContent = category.label;
+      unitCategory.append(option);
+    }
+    updateUnitOptions();
+  }
+
+  function swapUnits() {
+    const previousFrom = unitFrom.value;
+    unitFrom.value = unitTo.value;
+    unitTo.value = previousFrom;
+    convertUnits();
+  }
+
+  async function copyUnitResult() {
+    if (!unitResult.value) return;
+    try {
+      await navigator.clipboard.writeText(unitResult.value);
+      unitMessage.textContent = "Результат скопирован";
+    } catch (error) {
+      unitMessage.textContent = "Не удалось скопировать результат";
+    }
+  }
+
+  function clearUnitConverter() {
+    unitInput.value = "";
+    unitResult.value = "";
+    unitMessage.textContent = "";
+    updateUnitFormula();
   }
 
   function openSidebar() {
@@ -466,7 +738,7 @@
   function crc32(bytes) {
     let crc = -1;
     for (let index = 0; index < bytes.length; index += 1) {
-      crc = (crc >>> 8) ^ crcTable[(crc ^ bytes[index]) & 0xff];
+      crc = (crc >>> 8) ^ (crcTable[(crc ^ bytes[index]) & 0xff]);
     }
     return (crc ^ -1) >>> 0;
   }
@@ -588,6 +860,14 @@
     resetCompressAll();
     showView("home");
   });
+  unitCategory.addEventListener("change", updateUnitOptions);
+  unitInput.addEventListener("input", convertUnits);
+  unitFrom.addEventListener("change", convertUnits);
+  unitTo.addEventListener("change", convertUnits);
+  swapUnitsButton.addEventListener("click", swapUnits);
+  copyUnitButton.addEventListener("click", copyUnitResult);
+  clearUnitButton.addEventListener("click", clearUnitConverter);
+  unitCloseButton.addEventListener("click", () => showView("home"));
   modeInputs.forEach((input) => input.addEventListener("change", updateCompressMode));
   menuButton.addEventListener("click", openSidebar);
   overlay.addEventListener("click", closeSidebar);
@@ -637,6 +917,7 @@
   });
 
   updateCompressMode();
+  initializeUnitConverter();
   updateStats();
   updateCompressStats();
 })();
